@@ -159,8 +159,8 @@ def transform_listings(df):
     df = df[pd.notnull(df['review_scores_rating'])].reset_index()  # Remove null review scores
     df = df.rename(columns={'id': 'listing_id'})
     df = pd.DataFrame(pd.concat([df] + vectorize(df, ['summary', 'house_rules', 'host_about']), 1))
-    df = encode(df, ['listing_id', 'experiences_offered', 'host_id', 'host_response_time', 'neighbourhood_cleansed',
-                     'zipcode', 'property_type', 'room_type', 'bed_type', 'cancellation_policy'])
+    df = encode(df, ['experiences_offered','host_response_time', 'neighbourhood_cleansed', 'zipcode', 'property_type',
+                     'room_type', 'bed_type', 'cancellation_policy'])
     df = transform_host_since(df)
     df = transform_boolean(df, ['host_is_superhost', 'host_has_profile_pic', 'host_identity_verified',
                                 'is_location_exact', 'requires_license', 'instant_bookable',
@@ -279,8 +279,8 @@ def fit(x_train, y_train):
     d_train = xgb.DMatrix(x_train, y_train)
 
     params = {'silent': 1, 'eta': 0.05, 'max_depth': 5, 'subsample': 0.75, 'colsample_bytree': 0.75,
-              'objective': 'multi:softprob', 'num_class': 10, 'eval_metric': 'mlogloss'}
-    num_boost_round = 1000
+              'objective': 'multi:softmax', 'num_class': 10, 'eval_metric': 'mlogloss'}
+    num_boost_round = 10
 
     bst = xgb.train(params, d_train, num_boost_round)
 
@@ -310,7 +310,8 @@ def main():
     bst = fit(x_train, y_train)
     pred = predict(x_test, bst)
 
-    print(pred)
+    print(np.equal(pred, y_test).mean())
+    print(np.sqrt(((pred - y_test) ** 2).mean()))
 
 if __name__ == '__main__':
     main()

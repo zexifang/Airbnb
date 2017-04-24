@@ -21,13 +21,13 @@ def transform_review_scores(df, resp='review_scores_rating'):
     return df
 
 
-def transform_zipcode(df):
+def transform_zipcode(df, variable='zipcode'):
     """Transform zipcode to outward code
     
     :param df: data frame to be transformed
+    :param variable: zipcode
     :return: transformed data frame
     """
-    variable = 'zipcode'
     df[variable] = df[variable].fillna('')
     df[variable] = df[variable].str.upper().str.replace('[^0-9A-Z]+', '')
     df.loc[df[variable].str.len() >= 8, variable] = ''  # Remove wrongly recorded zipcode
@@ -36,13 +36,15 @@ def transform_zipcode(df):
     return df
 
 
-def transform_label(df, variables):
+def transform_label(df, variables=None):
     """Encode labels using numerical values
     
     :param df: data frame to be transformed
     :param variables: list of variables to be encoded
     :return: transformed data frame
     """
+    if variables is None:
+        variables = []
     encoder = LabelEncoder()
     for variable in variables:
         df[variable] = df[variable].fillna('')
@@ -61,19 +63,21 @@ def transform_host_since(df):
     return df
 
 
-def transform_boolean(df, variables):
+def transform_boolean(df, variables=None):
     """Transform boolean values
     
     :param df: data frame to be transformed
     :param variables: list of variables to be transformed
     :return: transformed data frame
     """
+    if variables is None:
+        variables = []
     for variable in variables:
         df[variable] = df[variable].map({'f': 0, 't': 1}, 'ignore')
     return df
 
 
-def transform_text(df, variables, max_features=100):
+def transform_text(df, variables=None, max_features=100):
     """Transform variables consisting of text into a sparse format
     
     :param df: data frame to be transformed
@@ -81,6 +85,8 @@ def transform_text(df, variables, max_features=100):
     :param max_features: maximum number of features
     :return: transformed data frame
     """
+    if variables is None:
+        variables = []
     vectorizer = CountVectorizer(stop_words='english', max_features=max_features)
     tmp = []
     for variable in variables:
@@ -93,39 +99,43 @@ def transform_text(df, variables, max_features=100):
     return df
 
 
-def transform_percent(df, variables):
+def transform_percent(df, variables=None):
     """Transform strings of percentages to decimals
     
     :param df: data frame to be transformed
     :param variables: list of variables to be transformed
     :return: transformed data frame
     """
+    if variables is None:
+        variables = []
     for variable in variables:
         df[variable] = df[variable].str.strip('%')
         df[variable] = df[variable].astype(np.float64) / 100
     return df
 
 
-def transform_price(df, variables):
+def transform_price(df, variables=None):
     """Transform strings of price to numerals
     
     :param df: data framed to be transformed
     :param variables: list of variables to be transformed
     :return: transformed data frame
     """
+    if variables is None:
+        variables = []
     for variable in variables:
         df[variable] = df[variable].str.strip('$').str.replace(',', '')  # Remove dollar signs and thousands separators
         df[variable] = df[variable].astype(np.float64)
     return df
 
 
-def transform_amenities(df):
+def transform_amenities(df, variable='amenities'):
     """Extract amenities
     
     :param df: data frame to be transformed
+    :param variable: amenities
     :return: transformed data frame
     """
-    variable = 'amenities'
     df[variable] = df[variable].str.replace(r'[:\-\./ ]', '_').str.replace(r'[\(\)]', '').str.replace(r'_+', '_') \
         .str.lower()  # Clean the format of amenities
     df = transform_text(df, [variable])
@@ -134,7 +144,7 @@ def transform_amenities(df):
     return df
 
 
-def remove_redundant_features(df, variables, resp='review_scores_rating'):
+def remove_redundant_features(df, variables=None, resp='review_scores_rating'):
     """Perform chi-squared test to remove sparse features of low significance
     
     :param df: data frame to be transformed
@@ -142,6 +152,8 @@ def remove_redundant_features(df, variables, resp='review_scores_rating'):
     :param resp: response
     :return: transformed data frame
     """
+    if variables is None:
+        variables = []
     for variable in variables:
         variables_list = [item for item in df.columns if variable + '.' in item]  # Find sparse features
         tmp = df[variables_list + [resp]].dropna()
@@ -309,7 +321,7 @@ def main():
 
     m_log_loss = log_loss(y_test, pred, labels=np.arange(5))
 
-    print(m_log_loss)
+    print('The logarithmic loss is {}.'.format(m_log_loss))
 
 
 if __name__ == '__main__':
